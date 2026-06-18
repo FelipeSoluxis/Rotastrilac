@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Trilac — Rota do Representante</title>
+<style>
+  :root {
+    --blue: #1565C0; --blue-light: #E3F2FD; --blue-mid: #1976D2;
+    --green: #2E7D32; --green-light: #E8F5E9;
+    --amber: #E65100; --amber-light: #FFF3E0;
+    --purple: #6A1B9A; --purple-light: #F3E5F5;
+    --teal: #00695C; --teal-light: #E0F2F1;
+    --red: #B71C1C; --red-light: #FFEBEE;
+    --gray: #37474F; --gray-light: #ECEFF1;
+    --text: #212121; --text2: #546E7A; --text3: #90A4AE;
+    --bg: #F5F7FA; --card: #FFFFFF;
+    --border: #E0E7EF; --radius: 12px; --radius-sm: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  .app-header { background: var(--blue); color: #fff; padding: 16px 16px 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .app-header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  .app-header .subtitle { font-size: 13px; opacity: 0.85; margin-top: 2px; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .date-chip { background: rgba(255,255,255,0.2); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+
+  /* NAV TABS */
+  .nav { display: flex; background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav-btn { flex: 0 0 auto; padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--text2); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: color 0.15s; }
+  .nav-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* SCREENS */
+  .screen { display: none; padding: 16px; }
+  .screen.active { display: block; }
+
+  /* DAY SELECTOR */
+  .day-selector { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; scrollbar-width: none; margin-bottom: 16px; }
+  .day-selector::-webkit-scrollbar { display: none; }
+  .day-pill { flex: 0 0 auto; background: #fff; border: 1.5px solid var(--border); border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+  .day-pill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .day-pill:active { transform: scale(0.96); }
+
+  /* VISIT CARDS */
+  .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 10px; }
+  .visit-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  .visit-header { display: flex; align-items: center; gap: 12px; padding: 14px; cursor: pointer; }
+  .order-badge { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+  .visit-info { flex: 1; min-width: 0; }
+  .visit-time { font-size: 11px; color: var(--text3); font-weight: 600; }
+  .visit-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+  .seg-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px; flex-shrink: 0; }
+  .chevron-icon { font-size: 18px; color: var(--text3); transition: transform 0.2s; flex-shrink: 0; }
+  .visit-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+  .visit-body.open { display: block; }
+  .chevron-icon.open { transform: rotate(180deg); }
+  .detail-row { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--bg); align-items: flex-start; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-icon { font-size: 16px; flex-shrink: 0; padding-top: 1px; }
+  .detail-label { font-size: 11px; color: var(--text3); }
+  .detail-value { font-size: 13px; color: var(--text); }
+  .action-row { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-action { flex: 1; padding: 10px 8px; border-radius: var(--radius-sm); border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .btn-action:active { transform: scale(0.97); }
+  .btn-maps { background: var(--blue); color: #fff; }
+  .btn-wpp { background: #25D366; color: #fff; }
+  .btn-check { background: var(--green-light); color: var(--green); }
+  .notes-area { width: 100%; margin-top: 10px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; resize: none; color: var(--text); background: var(--bg); }
+  .notes-area:focus { outline: none; border-color: var(--blue); }
+
+  /* STATUS BAR */
+  .status-bar { display: flex; gap: 8px; margin-bottom: 14px; }
+  .stat-card { flex: 1; background: var(--card); border-radius: var(--radius-sm); padding: 10px; text-align: center; border: 1px solid var(--border); }
+  .stat-num { font-size: 22px; font-weight: 700; }
+  .stat-lbl { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; margin-top: 1px; }
+
+  /* WEEK VIEW */
+  .week-day { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 8px; overflow: hidden; }
+  .week-day-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; }
+  .week-day-num { width: 36px; height: 36px; border-radius: 10px; background: var(--blue-light); color: var(--blue); font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .week-day-num.today { background: var(--blue); color: #fff; }
+  .week-day-info { flex: 1; }
+  .week-day-title { font-size: 14px; font-weight: 600; }
+  .week-day-sub { font-size: 12px; color: var(--text3); }
+  .week-day-body { display: none; padding: 0 14px 10px; border-top: 1px solid var(--border); }
+  .mini-visit { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--bg); align-items: center; }
+  .mini-visit:last-child { border-bottom: none; }
+  .mini-time { font-size: 11px; color: var(--text3); font-weight: 600; min-width: 38px; }
+  .mini-name { font-size: 12px; font-weight: 500; flex: 1; }
+  .mini-seg { font-size: 10px; padding: 2px 6px; border-radius: 6px; font-weight: 600; }
+
+  /* ROTEIRO SCREEN */
+  .script-card { background: var(--blue-light); border-left: 4px solid var(--blue); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 12px 14px; margin: 8px 0; font-size: 13px; line-height: 1.6; font-style: italic; color: var(--blue); }
+  .step-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; margin-bottom: 10px; }
+  .step-num-circle { width: 28px; height: 28px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0; }
+  .step-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; margin-bottom: 6px; }
+  .step-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .obj-card { background: var(--card); border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 12px; margin-bottom: 8px; }
+  .obj-q { font-size: 13px; font-weight: 700; color: var(--amber); margin-bottom: 4px; }
+  .obj-a { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .section-label { font-size: 16px; font-weight: 700; margin: 18px 0 10px; color: var(--text); }
+
+  /* CHECKED STATE */
+  .visit-card.checked { opacity: 0.6; }
+  .visit-card.checked .order-badge { background: var(--green-light) !important; color: var(--green) !important; }
+
+  /* SEGMENT COLORS */
+  .seg-pad { background: #E3F2FD; color: #1565C0; }
+  .seg-sup { background: #E8F5E9; color: #2E7D32; }
+  .seg-hort { background: #E0F2F1; color: #00695C; }
+  .seg-emp { background: #FFF3E0; color: #E65100; }
+  .seg-rest { background: #F3E5F5; color: #6A1B9A; }
+  .seg-lat { background: #FCE4EC; color: #880E4F; }
+  .seg-dist { background: #ECEFF1; color: #37474F; }
+
+  .badge-pad { background: #1565C0; color: #fff; }
+  .badge-sup { background: #2E7D32; color: #fff; }
+  .badge-hort { background: #00695C; color: #fff; }
+  .badge-emp { background: #E65100; color: #fff; }
+  .badge-rest { background: #6A1B9A; color: #fff; }
+  .badge-lat { background: #880E4F; color: #fff; }
+  .badge-dist { background: #546E7A; color: #fff; }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+  /* PROGRESS */
+  .progress-bar { background: var(--border); border-radius: 4px; height: 6px; margin-top: 4px; overflow: hidden; }
+  .progress-fill { background: var(--blue); height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+  /* WEEK NAV */
+  .week-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .week-nav select { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; background: var(--card); color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-row">
+    <div>
+      <h1>🥛 Trilac — Rota</h1>
+      <div class="subtitle">Representante Comercial • Sô Minas</div>
+    </div>
+    <div class="date-chip" id="today-date"></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showScreen('hoje')">📅 Hoje</button>
+  <button class="nav-btn" onclick="showScreen('semana')">📆 Semana</button>
+  <button class="nav-btn" onclick="showScreen('roteiro')">📋 Roteiro</button>
+  <button class="nav-btn" onclick="showScreen('objecoes')">💬 Objeções</button>
+</div>
+
+<!-- ===== HOJE ===== -->
+<div id="screen-hoje" class="screen active">
+  <div class="day-selector" id="day-selector"></div>
+  <div class="status-bar" id="status-bar"></div>
+  <div class="section-title" id="visits-title">Visitas do dia</div>
+  <div id="visits-container"></div>
+</div>
+
+<!-- ===== SEMANA ===== -->
+<div id="screen-semana" class="screen">
+  <div class="week-nav">
+    <select id="week-select" onchange="renderWeek()"></select>
+  </div>
+  <div id="week-container"></div>
+</div>
+
+<!-- ===== ROTEIRO ===== -->
+<div id="screen-roteiro" class="screen">
+  <div class="section-label">☀️ Antes de sair</div>
+  <div class="step-card">
+    <div class="step-title"><span class="step-num-circle">1</span> Revise os clientes do dia</div>
+    <div class="step-desc">Consulte o histórico de compras e último pedido de cada cliente. Identifique produtos para oferecer.</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title"><span class="step-num-circle">2</span> Prepare amostras e tabela</div>
+    <div class="step-desc">Separe os produtos Sô Minas mais relevantes por perfil: padaria, supermercado, restaurante, hortifruti.</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title"><span class="step-num-circle">3</span> Planeje o deslocamento</div>
+    <div class="step-desc">Agrupe clientes por bairro. Use o botão "Maps" no card de cada visita para navegar.</div>
+  </div>
+
+  <div class="section-label">🤝 Na visita</div>
+  <div class="step-card">
+    <div class="step-title"><span class="step-num-circle">1</span> Apresentação (2 min)</div>
+    <div class="script-card">"Bom dia! Sou [nome], represento a Trilac — distribuímos os laticínios Sô Minas na região. Posso falar com o responsável pelas compras?"</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title"><span class="step-num-circle">2</span> Sondagem (5 min)</div>
+    <div class="script-card">"Vocês trabalham com laticínios de quais marcas hoje? Qual produto tem mais dificuldade de abastecer?"</div>
+    <div class="step-desc" style="margin-top:8px">Ouça mais do que fale. Anote as dores: prazo, preço, ruptura de estoque.</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title"><span class="step-num-circle">3</span> Proposta (5 min)</div>
+    <div class="script-card">"A Sô Minas tem [produto], entrega toda [dia], com prazo de [X dias]. Posso deixar uma amostra pra você experimentar?"</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title"><span class="step-num-circle">4</span> Fechamento (3 min)</div>
+    <div class="script-card">"Que tal fechar um pedido menor pra testar? Posso incluir [produto A] e [produto B], entrega na [data]."</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title"><span class="step-num-circle">5</span> Encerramento</div>
+    <div class="script-card">"Vou confirmar por WhatsApp. Já anoto que passo na próxima [semana] pra ver como foi!"</div>
+  </div>
+
+  <div class="section-label">📱 Pós-visita</div>
+  <div class="step-card">
+    <div class="step-title"><span class="step-num-circle">✓</span> Registre o resultado</div>
+    <div class="step-desc">Use o botão ✓ em cada visita para marcar como concluída. Envie mensagem de confirmação pelo WhatsApp.</div>
+  </div>
+</div>
+
+<!-- ===== OBJEÇÕES ===== -->
+<div id="screen-objecoes" class="screen">
+  <div class="section-title">Como contornar as principais objeções</div>
+  <div class="obj-card">
+    <div class="obj-q">❝ Já tenho fornecedor de laticínios. ❞</div>
+    <div class="obj-a">→ "Entendo! Muitos clientes tinham antes de nos conhecer. Não precisa trocar — posso complementar o que falta? Qual produto às vezes falta?"</div>
+  </div>
+  <div class="obj-card">
+    <div class="obj-q">❝ O preço de vocês é mais caro. ❞</div>
+    <div class="obj-a">→ "Pode parecer. Mas quando somamos prazo de entrega, qualidade e zero ruptura, o custo real costuma ser menor. Posso comparar com o que você compra hoje?"</div>
+  </div>
+  <div class="obj-card">
+    <div class="obj-q">❝ Não tenho espaço / estoque cheio. ❞</div>
+    <div class="obj-a">→ "Trabalho com pedidos menores e entrega frequente justamente pra não pesar no estoque. Qual o menor volume que faria sentido pra testar?"</div>
+  </div>
+  <div class="obj-card">
+    <div class="obj-q">❝ Deixa pra próxima semana. ❞</div>
+    <div class="obj-a">→ "Claro! Posso já agendar — qual o melhor dia pra você, [dia A] ou [dia B]? Assim garanto que passo na hora certa."</div>
+  </div>
+  <div class="obj-card">
+    <div class="obj-q">❝ Não conheço a marca. ❞</div>
+    <div class="obj-a">→ "Por isso vim pessoalmente! Posso deixar uma amostra hoje mesmo pra você e sua equipe experimentarem. Sem compromisso."</div>
+  </div>
+  <div class="obj-card">
+    <div class="obj-q">❝ Meu fornecedor atual é mais rápido. ❞</div>
+    <div class="obj-a">→ "Entendo a importância do prazo. Nossa entrega é toda [dia da semana]. Se você pedir até [hora], garanto chegada no dia seguinte. Posso mostrar nossa grade de entrega?"</div>
+  </div>
+
+  <div class="section-label" style="margin-top:16px">💡 Dicas por segmento</div>
+  <div class="step-card">
+    <div class="step-title">🥖 Padarias e Confeitarias</div>
+    <div class="step-desc">Foco: requeijão, creme de leite, manteiga. Visitar cedo (7–9h). Mostrar variedade de embalagens.</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title">🏪 Supermercados</div>
+    <div class="step-desc">Foco: mix completo, espaço em gôndola. Falar com comprador (não caixa). Visitar 9–11h.</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title">🥗 Hortifrutis e Sacolões</div>
+    <div class="step-desc">Foco: queijo minas, ricota, iogurte. Argumento: giro rápido e embalagem atrativa.</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title">🍽️ Restaurantes e Lanchonetes</div>
+    <div class="step-desc">Foco: creme de leite, queijo ralado, catupiry, manteiga. Propor contrato mensal.</div>
+  </div>
+  <div class="step-card">
+    <div class="step-title">🧀 Empórios e Casa do Norte</div>
+    <div class="step-desc">Destaque origem e qualidade Minas. Queijos artesanais têm apelo. Explore cross-sell.</div>
+  </div>
+</div>
+
+<script>
+const SEG = {
+  pad:{label:'Padaria',cls:'pad'},sup:{label:'Supermercado',cls:'sup'},
+  hort:{label:'Hortifruti',cls:'hort'},emp:{label:'Empório',cls:'emp'},
+  rest:{label:'Restaurante',cls:'rest'},lat:{label:'Laticínios',cls:'lat'},
+  dist:{label:'Distribuidor',cls:'dist'}
+};
+
+// ============================================================
+// DADOS — 176 dias completos (gerado da planilha)
+// ============================================================
+const ROTA = [];
+const names = [
+  // dia 1-10
+  [['20.839.854 Joana D Arc dos Santos Silva','lat'],['29 563 654 Angela Maria Rodrigues dos Santos','lat'],['2NJ Confeitaria e Panificadora Ltda','pad'],['35.964.679 Delce Ducati','lat']],
+  [['37 186 288 Renata Damascena de Freitas','lat'],['40 280 432 Giovanna Sant Anna Diniz Prado','lat'],['42.889.637 Anderson Falcão do Prado Monz','lat'],['44.793.967 Mariana Dias Carvalho da Silva','lat']],
+  [['45 966 030 Rosa Maria Alves de Mira','lat'],['50.975.675 Isabel Aparecida Ribeiro de Freitas','lat'],['52 696 551 Ana Paula Miranda Marsili','lat'],['52.502.674 Tatiane Rodrigues Maciel','lat']],
+  [['57.601.065 Juracy Izaltina de Jesus','lat'],['59.554.914 Adriana Alves Ribeiro','lat'],['5M Comércio Atacadista de Alimentos (L1)','sup'],['A.A.Afonso e CIA Ltda','dist']],
+  [['ABC Feira Limpa Eireli','sup'],['Aeromate 1 Lanches Ltda','rest'],['Aeromate Distribuidora Ltda','dist'],['Afonso e Gennari Ltda','dist']],
+  [['Agate Supermercado Medeiros Ltda','sup'],['AJP Comércio de Produtos Alimentícios','dist'],['Alana Santos Aragão','lat'],['Alpick Comércio de Alimentos e Serviços','dist']],
+  [['Altas Horas Adega Ltda','dist'],['Amadeu Fernandes','lat'],['Anadia Comercial Panificadora e Importad','pad'],['Anjo Aniel Frios e Laticínios Ltda','lat']],
+  [['Antonio Carlos Augusto Padaria Eireli','pad'],['Armazém dos Pães e Frios Ltda','pad'],['As Veras Confeitaria Ltda','pad'],['Astro Rei Pães e Doces Ltda','pad']],
+  [['Atacadão Dunorte Comércio de Alimentos','dist'],['Atacadão Souza Comércio de Produtos Nord','dist'],['Bake a Wish Confeitaria Ltda','pad'],['Bakebun Bakery Indústria e Comércio','pad']],
+  [['Baratão São Lucas Ltda','sup'],['Baratinho Almeida Supermercado Ltda','sup'],['Basilicata Pão Empório e Restaurante','emp'],['Bela Cintra de Pães e Doces Ltda','pad']],
+  // dia 11-20
+  [['Bella Napoles Eireli','rest'],['Bella Prudência Panificadora e Delivery','pad'],['Bengala Supermercado Ltda','sup'],['Bocão Comércio de Doces Ltda','pad']],
+  [['Box Mineiro Bela Vista Ltda','emp'],['C Anália Supermercado Ltda','sup'],['Casa Branca do Morumbi Pães e Doces','pad'],['Casa de Carnes Bom Retiro Ltda','dist']],
+  [['Casa de Carnes Dalcin Ltda','dist'],['Casa de Carnes London Ltda','dist'],['Casa de Carnes Porto Belo Ltda','dist'],['Casa de Pães Trigo Nobre Ltda','pad']],
+  [['Casa do Norte Empório Central Ltda','emp'],['Casa do Norte Jequié Atacado e Varejo','emp'],['Casa do Norte Mineirinho do Brás Ltda','emp'],['Casa do Norte Osasco Ltda','emp']],
+  [['Casa do Norte Realce Ltda','emp'],['Casa dos Pães Ltda','pad'],['Castelúche Pizza Bar Ltda','rest'],['Charlot Pães e Doces Ltda','pad']],
+  [['Chibras Supermercado Ltda','sup'],['Colonial Pães e Doces Ltda','pad'],['Comercial Carijós de Alimentos Ltda','dist'],['Comercial e Importadora Natural Foods','dist']],
+  [['Comercial Hortifruti de Cotia Ltda','hort'],['Comercial Louro de Frios e Salgados','lat'],['Comercial Luzia Meire de Gêneros Alim','dist'],['Comercial Matrit Ltda','sup']],
+  [['Comercial Shitsu Ltda','dist'],['Comercial Zanata de Alimentos Eireli','dist'],['Comércio de Alimentos Alves e Farias','dist'],['Comércio de Alimentos Santa Cruz Ltda','dist']],
+  [['Comércio de Alimentos Santo Amaro Ltda','dist'],['Comércio de Alimentos Violeta Ltda','dist'],['Comércio de Hortifruti Dona Noneca','hort'],['Comércio de Hortifruti Pinheiro Ltda','hort']],
+  [['Comércio de Produtos Alimentícios Fregni','dist'],['Compra Fácil Supermercados Ltda','sup'],['Contra a Maré Mercado Variado Ltda','sup'],['Cursi e Albieri Confeitaria Café e Conv','pad']],
+  // dia 21-30
+  [['D V Rodrigues Mercado Eireli','sup'],['Da Villa Comércio e Distribuição de Alim','dist'],['Dany Comercial de Alimentos Ltda','dist'],['DaSilva Alimentos Ltda','dist']],
+  [['DB Comércio de Doces Ltda','pad'],['Del Nero e Mirandez Rest Pizz Conv Ltda','rest'],['Denise Belancon de Barros Restaurante','rest'],['Distribuidora Atacadista Arcos Ltda','dist']],
+  [['Distribuidora de Frios Padilha Ltda','lat'],['Distribuidora LV Santos Ltda','dist'],['Doce Preço e CIA Comércio de Alimentos','dist'],['Dom Jaime Hortifruti Comércio de Alim','hort']],
+  [['Dream Foods Comércio e Distribuição Ltda','dist'],['DTK Comércio de Alimentos Ltda','dist'],['Empório Cattani Ltda','emp'],['Empório da Gente Ltda','emp']],
+  [['Empório do Arroz Integral Ltda','emp'],['Empório do Churrasco Comércio em Alim','rest'],['Empório do Parque Limitada','emp'],['Empório do Velhinho Ltda','emp']],
+  [['Empório e Mercearia Elite Ltda','emp'],['Empório Indiana Rotisseria Eireli','rest'],['Empório Monte Verde Ltda','emp'],['Empório Nordestino Osasco Ltda','emp']],
+  [['Empório Perecíveis Ltda','emp'],['Empório Praça das Canárias Ltda','emp'],['Empório Vinhares Ltda','emp'],['Empório Viseu Ltda','emp']],
+  [['Emporium e Hortifruti Higienópolis Ltda','hort'],['Essen Pães e Doces Ltda','pad'],['ESTDP Comércio e Participações Ltda','dist'],['ESTS Comércio e Participações Ltda','dist']],
+  [['F E K Distribuidora de Alimentos Ltda','dist'],['Fábio Carlos dos Santos Santana','lat'],['Faccini Tech Comércio e Serviços Ltda','dist'],['Fácil Supermercado Ltda','sup']],
+  [['Favos D Mel III Pães e Doces Eireli','pad'],['Fazenda dos Pães Conveniências Ltda','pad'],['FBQ Pães Artesanais Eireli','pad'],['Flor das Américas Arte Doces dos Pães','pad']],
+  // dia 31-50
+  [['FLV Comércio de Hortifruto Ltda','hort'],['Food-Society HG Volano Ltda','dist'],['Forneria Biglia Panificadora e Confeit','pad'],['Franbu Ltda','dist']],
+  [['Frios e Laticínios 3 Corações Ltda','lat'],['Funchal Artigos para Festas Ltda','dist'],['Funchal Indústria e Comércio de Papéis','dist'],['Futuro Refeitório Ltda','rest']],
+  [['FVS Hamburgueria Ltda','rest'],['G.G Blanco Mercearia Ltda','sup'],['Gardini e Gardini Mercearia e Empório','emp'],['Giugiu Bar e Restaurante Ltda','rest']],
+  [['Goya Supermercado Ltda','sup'],['H M F Supermercados Ltda (L1)','sup'],['HDN Comércio de Produtos Alimentícios','dist'],['Hortifruti Celso Garcia Ltda','hort']],
+  [['Hortifruti Chácara Flora Ltda','hort'],['Hortifruti da Vila ABC Comércio de Alim','hort'],['Hortifruti do Bairro Ltda','hort'],['Hortifruti e Supermercado Braz Leme','hort']],
+  [['Hortifruti e Supermercado Lapa Ltda','hort'],['Hortifruti Mirandópolis Ltda','hort'],['Hortifruti Nações Ltda','hort'],['Hortifruti Nova Tatuapé Ltda','hort']],
+  [['Hortifruti Pomar da Vila e Mercearia','hort'],['Hortifruti Queiroz Filho Ltda','hort'],['Hortifruti Turmalina Ltda','hort'],['Hortifruti União Ltda','hort']],
+  [['Hortifruti Vila das Frutas Bosque da Saúde','hort'],['Hortifruti Zelina Ltda','hort'],['Hortifrutti Hitomix Ltda','hort'],['I.S.Coelho Soares','lat']],
+  [['Indústria de Panificação Vila Constância','pad'],['Indústria e Comércio de Panificação','pad'],['Inov Market Ltda','sup'],['Interbrands Foods Ltda','dist']],
+  [['Irmãos Gonçalves Pires Distribuidora','hort'],['Irmãos Suto Comércio de Alimentos Ltda','dist'],['J B Ferreira CIA Ltda','dist'],['J Di Pães e Doces Ltda','pad']],
+  // dia 41-60
+  [['J M Mori e CIA Ltda','dist'],['Jamir Torres da Silva Laticínios','lat'],['Jardim Satélite Hortifruti Ltda','hort'],['João Domingos Mini Mercado Ltda','sup']],
+  [['Joia Mercado Ltda','sup'],['José Cláudio Corrêa Laticínios','lat'],['JSK Supermercado Ltda','sup'],['JSV Supermercados Eireli','sup']],
+  [['Kawahara Supermercados Ltda','sup'],['Kio Comercial Agrícola Ltda','dist'],['L Martin Doces','pad'],['La Ville Elegance Pães e Doces Ltda','pad']],
+  [['Laticínios do Velhinho Ltda','lat'],['Lameiro Mercearia Ltda','sup'],['Lanchonete Jaceguava Ltda','rest'],['Laticínios Camanducaia Ltda','lat']],
+  [['Laticínios Correntes Ltda','lat'],['Laticínios Diana S Ltda','lat'],['Laticínios São Carlos Ltda','lat'],['LDPD Comércio de Alimentos Ltda','dist']],
+  [['Lebanon Market Center Eireli','sup'],['Líder do Campestre Pães e Doces Ltda','pad'],['Logo Ali Supermercados Ltda','sup'],['Loja de Conveniência Gaguinho Ltda','dist']],
+  [['Lojão do Brás Ltda','dist'],['Long Chen Mercearia','sup'],['LRG Comércio de Artigos Nacionais e Imp','dist'],['Luzita Ind e Com Ltda','dist']],
+  [['M A Rodrigues Alimentos','dist'],['M D X Supermercado Eireli','sup'],['M E M Hortfruit Avícola e Laticínios','hort'],['M.C. Afonso Comércio de Pães e Doces','pad']],
+  [['Magnânimo Comercial Importação e Export','dist'],['Mannrich e Vasconcelos Advogados','dist'],['Mano S Comércio de Doces Ltda','pad'],['Maremontí Alphaville Restaurante Ltda','rest']],
+  [['Maremontí Arujá Restaurante Ltda','rest'],['Maremontí Cambui Restaurante Ltda','rest'],['Maremontí Campinas Restaurante Ltda','rest'],['Maremontí Campo Belo Restaurante Ltda','rest']],
+  // dia 51-80
+  [['Maremontí Faria Lima Restaurante Ltda','rest'],['Maremontí Jundiaí Restaurante Ltda','rest'],['Maremontí Riviera Restaurante Ltda','rest'],['Maremontí São Caetano Restaurante Ltda','rest']],
+  [['Maria Philo Alimentos Delivery Eireli','dist'],['Massimo Comércio e Importação de Servico','dist'],['Mazaro Rozetti Doces Comercial de Alim','pad'],['ME Hortifruit Avícola e Laticínios Ltda','hort']],
+  [['Meat & Market Comércio de Carnes Ltda','dist'],['Mega Top Supermercado Ltda','sup'],['Mercadão Atacadista Comercial de Alim','dist'],['Mercadinho Apiacás Ltda','sup']],
+  [['Mercadinho Barbacena Ltda','sup'],['Mercadinho Belize Ltda','sup'],['Mercadinho Bem Barato Ltda','sup'],['Mercadinho Bonanza Ltda','sup']],
+  [['Mercadinho Caiowaa Ltda','sup'],['Mercadinho e Panificadora Souza Ltda','pad'],['Mercadinho Lodetti Ltda','sup'],['Mercadinho Nestor Pestana Ltda','sup']],
+  [['Mercadinho Nikkey Ltda','sup'],['Mercadinho Oriental Eireli','sup'],['Mercadinho Pompéia Ltda','sup'],['Mercadinho Serv Mago Ltda','sup']],
+  [['Mercadinho SP Ltda','sup'],['Mercadinho Vila Romana Ltda','sup'],['Mercado A M Rodrigues Ltda','sup'],['Mercado Bitencourt Ltda','sup']],
+  [['Mercado Boa Casa Ltda','sup'],['Mercado Cabral e Coutinho Ltda','sup'],['Mercado Cambera Ltda','sup'],['Mercado Central Ltda','sup']],
+  [['Mercado Colombo Ltda','sup'],['Mercado da Hora Eireli','sup'],['Mercado do Velhinho Ltda','sup'],['Mercado dos Doces Vila Formosa (L1)','sup']],
+  [['Mercado e Hortifruti Corrêa Heitor Pente','hort'],['Mercado e Hortifruti Corrêa Limão Ltda','hort'],['Mercado Happy Família Ltda','sup'],['Mercado Hortimix Ltda','sup']],
+  // dia 61-80
+  [['Mercado Mais Barato Ltda','sup'],['Mercado Novo Oriental Ltda','sup'],['Mercado Vila Re Ltda','sup'],['Mercado Violeta Ltda (L1)','sup']],
+  [['Mercantil Santa Paula Ltda','dist'],['Mercantil Tambaú de Alimentos Ltda','dist'],['Mercearia e Casa de Carnes Montalegre','dist'],['Mercearia Irmãos Penteado Ltda','sup']],
+  [['Mercearia Urbana Comercial Ltda','sup'],['Meyer e Schwarzwalder Alimentos Ltda','dist'],['Mini Mercado Doce Preço Ltda','sup'],['Mini Mercado Hagape S Ltda','sup']],
+  [['Mini Mercado Luana Nayara Ltda','sup'],['Minimercado Imperatriz Ltda','sup'],['Minimercado Monte Alverne Ltda','sup'],['Mirandez Resta Lanch Pizzar Conveni','rest']],
+  [['Mundo Nordestino Comércio de Alimentos','dist'],['N N K Supermercados Eireli','sup'],['Nabrasa Steak Comércio de Alimentos','rest'],['NB Steak Alphaville Restaurante Ltda','rest']],
+  [['NB Steak Braz Leme Restaurante Ltda','rest'],['NB Steak Campinas Restaurante Ltda','rest'],['NB Steak Comércio de Alimentos Ltda','rest'],['NB Steak JK Comércio de Alimentos Ltda','rest']],
+  [['NB Steak Paraíso Restaurante Ltda','rest'],['Nelson Kioshi Nakada Comer Agrícola','dist'],['New Big 1 Supermercados Ltda','sup'],['Nicolau Carlos Eterovic e CIA Ltda','dist']],
+  [['Ninki Supermercados Ltda (L1)','sup'],['Nóbrega Pães e Doces Ltda','pad'],['Nonata Hortifruti Minimercado Rotisserie','hort'],['Nordeste Comércio Alimentos Ltda','dist']],
+  [['Nova Central Comércio de Alimentos Ltda','dist'],['Nova Letícia Pães e Doces Ltda','pad'],['Nova Pérola Pães e Doces Ltda','pad'],['Nova União Comércio de Alimentos Ltda','dist']],
+  [['Nova Vitória Régia II Jardim Padaria','pad'],['Novo Lar Supermercado Ltda','sup'],['Ônix Brasil Comercial Ltda','dist'],['Orquídea Máxima Pães e Doces Ltda','pad']],
+  // dia 71-90
+  [['Orquídea Pumila Pães e Doces Ltda','pad'],['P R M Serviços e Mão de Obra Especializ','dist'],['Padaria Dona Alexandrina Ltda','pad'],['Padaria e Confeitaria Baronesa Ltda','pad']],
+  [['Padaria e Confeitaria Charme Ltda','pad'],['Padaria e Confeitaria Flor do Paraíso','pad'],['Padaria e Confeitaria Nova Leão Ltda','pad'],['Padaria e Restaurante Valentina Ltda','pad']],
+  [['Padaria Merci Vila Romana Ltda','pad'],['Padaria Nova Orfanato Ltda','pad'],['Pães e Doces Artur Prado Ltda','pad'],['Pães e Doces Beth Mania Ltda','pad']],
+  [['Pães e Doces Columbia Ltda','pad'],['Pães e Doces Granno Douro Ltda','pad'],['Pães e Doces Luso Brasileira Ltda','pad'],['Pães e Doces Nova Ceará Ltda','pad']],
+  [['Pães e Doces Palma de Santos Delivery','pad'],['Pães e Doces Rosas de Maio Ltda','pad'],['Pães e Doces Sonho de Abelha Ltda','pad'],['Pães e Doces Talia Ltda','pad']],
+  [['Pães e Doces Vila Carmela Ltda','pad'],['Pães e Doces Vila Nova Ltda','pad'],['Panif e Confeitaria Soraia Ltda','pad'],['Panif e Doceira Portal do Padeiro Ltda','pad']],
+  [['Panif e Doceria Morro Alto Ltda','pad'],['Panificadora A Nova Portuense Ltda','pad'],['Panificadora Bienal Ltda','pad'],['Panificadora Big Bread Prime Aclimação','pad']],
+  [['Panificadora Ceci Ltda','pad'],['Panificadora e Conf Nova Vitória Régia','pad'],['Panificadora e Confeitaria Covadonga','pad'],['Panificadora e Confeitaria Elite das Per','pad']],
+  [['Panificadora e Confeitaria Família Queir','pad'],['Panificadora e Confeitaria Kennedy Ltda','pad'],['Panificadora e Pizzaria Grand Estoril','pad'],['Panificadora Fábrica dos Pães Ltda','pad']],
+  [['Panificadora Homem de Mello Ltda','pad'],['Panificadora Jardim Munhoz Ltda','pad'],['Panificadora La Inmaculada Ltda','pad'],['Panificadora Líder do Parque Delivery','pad']],
+  // dia 81-110
+  [['Panificadora Olivetanos Ltda','pad'],['Panificadora Pão da Vida Melo Eireli','pad'],['Panificadora Parque Continental Ltda','pad'],['Panificadora Parque Continental Ltda - E','pad']],
+  [['Pão Delícia Comércio de Alimentos Ltda','pad'],['Peg Pese Supermercados Import e Export','sup'],['Perdizes Comércio de Alimentos Ltda','dist'],['Petsis Mercado Variado Ltda','sup']],
+  [['Pico Supermercados Ltda','sup'],['Pizzaria Grassos Ltda','rest'],['Plimax Importação e Exportação Ltda','dist'],['Poema Comércio de Gêneros Alimentícios','dist']],
+  [['Portero Supermercado Ltda','sup'],['Porto Maria Comércio de Refeições e Del','rest'],['PoupaSuper Supermercados Ltda','sup'],['Prazer dos Pães Ltda','pad']],
+  [['Preço Certo Distribuidor e Comércio Eire','dist'],['Primícia Pães e Doces Ltda','pad'],['Priscila Borges Lima Morais','lat'],['Public Comércio Atacadista e Varejista','dist']],
+  [['Quintal da Vila Arujazinho Hortifruti','hort'],['Quintal da Villa Hortifrutigranjeiros','hort'],['Quitanda Any Ltda','hort'],['R Andrade Comércio de Alimentos Ltda','dist']],
+  [['R P Santo Comércio de Gêneros Alimentíc','dist'],['R. D. Furukawa Comércio de Hortifruti','hort'],['Rafael Barreiro Drociunas','lat'],['Rasp Mercado Ltda','sup']],
+  [['RBV Supermercado Eireli','sup'],['RCS Comercial de Alimentos Ltda','dist'],['Rede Compremais Supermercado Ltda','sup'],['Rede Hort Mais Hortifruti Ltda','hort']],
+  [['Rei do Mate Distrib Import e Export Ltda','dist'],['Rei dos Pertences Comércio de Frios Ltda','lat'],['Ressaca Varejista e Atacadista de Produt','dist'],['Restaurante A Real Ltda','rest']],
+  [['Rodésia Pães e Doces Ltda','pad'],['Rodosnack Mairiporã Lanchonete e Restaur','rest'],['Roma RM Comércio de Alimentos Ltda','dist'],['Sacolão Bom Pastor Com de Gen Alim Ltda','hort']],
+  // dia 91-120
+  [['Sacolão Coriolano Ltda','hort'],['Sacolão Granja Viana Ltda','hort'],['Sacolão Oswaldo Cruz Ltda','hort'],['Sacolão Pio XI Ltda','hort']],
+  [['Sacolão Santa Cecília Ltda','hort'],['Sacolão Santo Amaro Ltda','hort'],['Sacolão São Jorge Ltda','hort'],['Sacolão Saraiva Ltda','hort']],
+  [['Sacolão Sta Catarina Ltda','hort'],['Sacolão Super Bom Ltda','hort'],['Sacolão Teotônio Vilela Ltda','hort'],['Sacolão Vila Carrão Ltda','hort']],
+  [['Sacolão Vila Formosa Ltda','hort'],['Sacolão Vila Mercês Ltda','hort'],['Sakamoto Quitanda Ltda','hort'],['Sakamy Distribuidora de Alimentos Ltda','dist']],
+  [['São Paulo Golf Club','dist'],['Sérgio Matheus de Araújo','lat'],['Shopping Fartura Comércio de Hortifrutig','hort'],['Shopping Fartura Paineiras Comércio de H','hort']],
+  [['Shopping Fartura Valinhos Comércio de H','hort'],['Shopping Frutas Flamboyant Comércio de H','hort'],['Shopping Frutas Guanabara Ltda','hort'],['Shopping Frutas Guanabara Ltda - ME','hort']],
+  [['Shopping Frutas Vista Alegre Comércio','hort'],['Sierra Distribuidora Ltda','dist'],['Silvestre Comércio de Produtos Aliment','dist'],['SJX Comercial Atacadista de Mercadorias','dist']],
+  [['Smart Break Comércio Lanches S A','rest'],['SPK Supermercado Ltda','sup'],['Super City Vintage Supermercado Ltda','sup'],['Super Frios Ibirapuera Com de Frios Ltda','lat']],
+  [['Supermercado ASA Comércio de Produtos Al','sup'],['Supermercado Bem Barato Diadema Ltda','sup'],['Supermercado Bem Barato São Paulo Ltda','sup'],['Supermercado Big Moraes Ltda','sup']],
+  [['Supermercado Boa Sorte Ltda','sup'],['Supermercado Castelo da Serra Ltda (L1)','sup'],['Supermercado Catanduva Ltda','sup'],['Supermercado Club de Campo Ltda','sup']],
+  // dia 101-130
+  [['Supermercado Correia Braga Eireli','sup'],['Supermercado Dom Petrópolis Ltda','sup'],['Supermercado Empório Mix Ltda','sup'],['Supermercado Fenícia Ltda','sup']],
+  [['Supermercado Flamengo Ltda (L1)','sup'],['Supermercado G Pires Plus Ltda','sup'],['Supermercado Hortifruti Vila das Frutas','hort'],['Supermercado Jardim Paraíso Ltda','sup']],
+  [['Supermercado Kiko Ltda','sup'],['Supermercado Kiyomoto Ltda','sup'],['Supermercado Panda Ltda','sup'],['Supermercado Porto Seguro Taboão Ltda (L1)','sup']],
+  [['Supermercado Remix Empório Javri Ltda','sup'],['Supermercado SIM Ltda','sup'],['Supermercado Super City Ltda','sup'],['Supermercado Super City Nobre Ltda','sup']],
+  [['Supermercado Super City SP II Ltda','sup'],['Supermercado Três Amigos Ltda','sup'],['Supermercado Vila das Frutas Abraão de M','hort'],['Supermercado Vila das Frutas Klabin Ltda','hort']],
+  [['Supermercado Violeta Itaberaba Ltda','sup'],['Supermercados Kacula Ltda (L1)','sup'],['Supermercados Preço Ideal Ltda','sup'],['Supermercados Yayá Ltda','sup']],
+  [['Supra Alimentos e Bebidas Ltda','dist'],['Talentos Supermercado Ltda (L1)','sup'],['Temperão do Brás Casa do Norte Ltda','emp'],['Tupã Supermercado Ltda','sup']],
+  [['Varejão Nordestino de Secos e Molhados','dist'],['Vila Zaira Hortifruti Ltda (L1)','hort'],['Villa Grano Pães e Conveniências Ltda','pad'],['Vivafrutaz Comércio de Alimentos Ltda','hort']],
+  [['Wine Universe Importadora Exportadora e','dist'],['WWW Distribuidora e Importadora Ltda','dist'],['Yago Hortifruti Eireli','hort'],['5M Comércio Atacadista (L2)','sup']],
+  [['Aeromate 1 Lanches Ltda (L2)','rest'],['Casa de Carnes Porto Belo (L2)','dist'],['Casa do Norte e Empório Mineirinho (L2)','emp'],['Comercial Luzia Meire de Gêneros Alim (L2)','dist']],
+  // dia 111-140
+  [['Comércio de Alimentos Alves e Farias (L2)','dist'],['Empório do Arroz Integral (L2)','emp'],['Empório Mega 100 Comércio de Alimentos (L2)','emp'],['Funchal Ind e Com de Papéis (L2)','dist']],
+  [['Got Coffee Comércio de Alimentos Eireli','rest'],['H M F Supermercados Ltda (L2)','sup'],['HDN Comércio de Produtos Alimentícios (L2)','dist'],['Hortifruti Turmalina Ltda (L2)','hort']],
+  [['Hortifruti Vila das Frutas Bosque (L2)','hort'],['Jardim Satélite Hortifruti Ltda (L2)','hort'],['Lebanon Market Center Ltda (L2)','sup'],['Mano S Comércio de Doces (L2)','pad']],
+  [['Market4U Mercados Autônomos Ltda (L2)','sup'],['Mazaro Rozetti Doces Comercial (L2)','pad'],['Meat & Market Comércio de Carnes (L2)','dist'],['Melhor Bocado Alimentos Ltda','dist']],
+  [['Mercadão Atacadista Comercial (L2)','dist'],['Mercado dos Doces Vila Formosa (L2)','sup'],['Mercado Violeta Ltda (L2)','sup'],['Mini Mercado Hortisabor Ltda (L2)','sup']],
+  [['Ninki Supermercados Ltda (L2)','sup'],['Nova Mega G Atacadista de Alimentos (L2)','dist'],['Panificadora Parque Continental Ltda (L2)','pad'],['Perdizes Comércio de Alimentos (L2)','dist']],
+  [['Preço Certo Distribuidor e Comércio (L2)','dist'],['Public Comércio Atacadista e Varejista (L2)','dist'],['Quintal da Villa Hortifrutigranjeiros (L2)','hort'],['R P Santo Comércio de Gêneros (L2)','dist']],
+  [['Rede Compremais Supermercado Ltda (L2)','sup'],['Shopping Fartura Comércio de Hortifrutig (L2)','hort'],['Shopping Frutas Vista Alegre (L2)','hort'],['SJX Comercial Atacadista (L2)','dist']],
+  [['Smart Break Comércio Lanches S A (L2)','rest'],['Supermercado Castelo da Serra Ltda (L2)','sup'],['Supermercado Flamengo Ltda (L2)','sup'],['Supermercado Gonçalves Pires Ltda (L2)','sup']],
+  [['Supermercado Hortifruti Vila das Frutas (L2)','hort'],['Supermercado Porto Seguro Taboão (L2)','sup'],['Supermercado Vila das Frutas Abraão (L2)','hort'],['Supermercado Vila das Frutas Klabin (L2)','hort']],
+  // dia 141-176
+  [['Supermercados Kacula Ltda (L2)','sup'],['Supermercados Preço Ideal Ltda (L2)','sup'],['Talentos Supermercado Ltda (L2)','sup'],['Vila Zaira Hortifruti Ltda (L2)','hort']],
+  [['Yago Hortifruti Ltda (L2)','hort'],['5M Comércio Atacadista (L3)','sup'],['Bella Paulista Restaurante Pães Doces e Frios (L3)','rest'],['Casa de Carnes Porto Belo (L3)','dist']],
+  [['Comercial Benz Eireli (L3)','dist'],['Comércio de Alimentos Alves e Farias (L3)','dist'],['Empório do Arroz Integral (L3)','emp'],['Funchal Ind e Com de Papéis (L3)','dist']],
+  [['H M F Supermercados Ltda (L3)','sup'],['Market4U Mercados Autônomos (L3)','sup'],['Mercadão Atacadista Comercial (L3)','dist'],['Mercado dos Doces Vila Formosa (L3)','sup']],
+  [['Mercado Violeta Ltda (L3)','sup'],['Mini Mercado Hortisabor Ltda (L3)','sup'],['Ninki Supermercados Ltda (L3)','sup'],['Preço Certo Distribuidor e Comércio (L3)','dist']],
+  [['Public Comércio Atacadista (L3)','dist'],['R P Santo Comércio de Gêneros (L3)','dist'],['SJX Comercial Atacadista (L3)','dist'],['Supermercado Castelo da Serra (L3)','sup']],
+  [['Supermercado Flamengo Ltda (L3)','sup'],['Supermercado Gonçalves Pires Ltda (L3)','sup'],['Supermercado Porto Seguro Taboão (L3)','sup'],['Supermercados Kacula Ltda (L3)','sup']],
+  [['Vila Zaira Hortifruti Ltda (L3)','hort'],['5M Comércio Atacadista (L4)','sup'],['Comercial Matrit Ltda (L4)','sup'],['Comércio de Alimentos Alves e Farias (L4)','dist']],
+  [['Empório Mega 100 Comércio de Alimentos (L4)','emp'],['Funchal Ind e Com de Papéis (L4)','dist'],['H M F Supermercados Ltda (L4)','sup'],['Mercadão Atacadista Comercial (L4)','dist']],
+  [['Mercado dos Doces Vila Formosa (L4)','sup'],['Mercado Violeta Ltda (L4)','sup'],['Ninki Supermercados Ltda (L4)','sup'],['Pães e Doces Le Champ de Blé Ltda (L4)','pad']],
+  [['Preço Certo Distribuidor e Comércio (L4)','dist'],['Public Comércio Atacadista (L4)','dist'],['R P Santo Comércio de Gêneros (L4)','dist'],['SJX Comercial Atacadista (L4)','dist']],
+  [['Supermercado Castelo da Serra (L4)','sup'],['Supermercado Porto Seguro Taboão (L4)','sup'],['Supermercados Kacula Ltda (L4)','sup'],['Vila Zaira Hortifruti Ltda (L4)','hort']],
+  [['5M Comércio Atacadista (L5)','sup'],['Comercial Benz Eireli (L5)','dist'],['Comercial Melhor Ltda (L5)','dist'],['Comércio de Alimentos Alves e Farias (L5)','dist']],
+  [['Funchal IND COM de Papéis LT (L5)','dist'],['Mercadão Atacadista Comercial (L5)','dist'],['Mercado dos Doces Vila Formosa (L5)','sup'],['Mercado Violeta Ltda (L5)','sup']],
+  [['R P Santo Comércio de Gêneros (L5)','dist'],['SJX Comercial Atacadista (L5)','dist'],['Supermercado Castelo da Serra (L5)','sup'],['Supermercado São Judas Tadeu Limitada (L5)','sup']],
+  [['Supermercados Kacula Ltda (L5)','sup'],['Vila Zaira Hortifruti Ltda (L5)','hort'],['5M Comércio Atacadista (L6)','sup'],['Comercial Benz Ltda (L6)','dist']],
+  [['Comercial Matrit Ltda (L6)','sup'],['Comércio de Alimentos Alves e Farias (L6)','dist'],['Mercadão Atacadista Comercial (L6)','dist'],['Mercado dos Doces Vila Formosa (L6)','sup']],
+  [['Mercado Violeta Ltda (L6)','sup'],['R P Santo Comércio de Gêneros (L6)','dist'],['Supermercado Castelo da Serra (L6)','sup'],['5M Comércio Atacadista (L7)','sup']],
+  [['Comercial Benz Eireli (L7)','dist'],['Comércio de Alimentos Alves e Farias (L7)','dist'],['Mercadão Atacadista Comercial (L7)','dist'],['Mercado Violeta Ltda (L7)','sup']],
+  [['R P Santo Comércio de Gêneros (L7)','dist'],['Supermercado Castelo da Serra (L7)','sup'],['5M Comércio Atacadista (L8)','sup'],['Comércio de Alimentos Alves e Farias (L8)','dist']],
+  [['Mercadão Atacadista Comercial (L8)','dist'],['Mercado dos Doces Vila Formosa (L8)','sup'],['Mercado Violeta Ltda (L8)','sup'],['Supermercado Castelo da Serra (L8)','sup']],
+  [['Supermercado Semar de Cezar de Souza (L8)','sup'],['5M Comércio Atacadista (L9)','sup'],['Comércio de Alimentos Alves e Farias (L9)','dist'],['Mercadão Atacadista Comercial (L9)','dist']],
+  [['5M Comércio Atacadista (L10)','sup'],['Comercial Semar de Pinda Ltda (L10)','dist'],['Comércio de Alimentos Alves e Farias (L10)','dist'],['Mercadão Atacadista Comercial (L10)','dist']],
+  [['5M Comércio Atacadista (L11)','sup'],['Comercial Semar de Pinda Ltda (L11)','dist'],['Comércio de Alimentos Alves e Farias (L11)','dist'],['Mercadão Atacadista Comercial (L11)','dist']],
+  [['5M Comércio Atacadista (L12)','sup'],['Comércio de Alimentos Alves e Farias (L12)','dist'],['Mercadão Atacadista Comercial (L12)','dist'],['Supermercado Semar de São Sebastião (L12)','sup']],
+  [['5M Comércio Atacadista (L13)','sup'],['Comércio de Alimentos Alves e Farias (L13)','dist'],['J G G Supermercados Ltda (L13)','sup'],['Mercadão Atacadista Comercial (L13)','dist']],
+  [['5M Comércio Atacadista (L14)','sup'],['Comércio de Alimentos Alves e Farias (L14)','dist'],['COML Keypar Rep e Superm Ltda (L14)','sup'],['Mercadão Atacadista Comercial (L14)','dist']],
+  [['5M Comércio Atacadista (L15)','sup'],['Comércio de Alimentos Alves e Farias (L15)','dist'],['COML Compre Melhor Gêneros Alim (L15)','dist'],['Sonda Supermercados Exportação e Imp (L15)','sup']],
+  [['5M Comércio Atacadista (L16)','sup'],['Almanara Restaurantes e Lanchonetes (L16)','rest'],['Sonda Supermercados Exportação e Imp (L16)','sup'],['Supermercado Semar de Cezar de Souza (L16)','sup']],
+  [['5M Comércio Atacadista (L17)','sup'],['Comercial Compre Melhor de Gêneros (L17)','dist'],['5M Comércio Atacadista (L18)','sup'],['Supermercado Semar de Cezar de Souza (L18)','sup']],
+  [['5M Comércio Atacadista (L19)','sup'],['Comercial Melhor Ltda (L19)','dist'],['5M Comércio Atacadista (L20)','sup'],['Comercial Compre Melhor de Gêneros (L20)','dist']],
+  [['5M Comércio Atacadista (L21)','sup'],['Supermercado Semar de Cezar de Souza (L21)','sup'],['5M Comércio Atacadista (L22)','sup'],['Comercial Melhor Ltda (L22)','dist']],
+  [['5M Comércio Atacadista (L23)','sup'],['Supermercado Semar de São Sebastião (L23)','sup'],['5M Comércio Atacadista (L24)','sup'],['5M Comércio Atacadista (L25)','sup']],
+  [['Supermercado Semar de São Sebastião (L25)','sup'],['5M Comércio Atacadista (L26)','sup'],['Comercial Keypar Representações e Sup (L26)','sup'],['5M Comércio Atacadista (L27)','sup']],
+  [['Comercial Keypar Representações e Sup (L27)','sup'],['COOP — Cooperativa de Consumo (L27)','sup'],['J G G Supermercados Ltda (L28)','sup'],['J G G Rep COML e Superm Ltda (L29)','sup']],
+  [['Comercial Semar de Pinda Ltda (L30)','dist'],['Comercial Semar de Pinda Ltda (L31)','dist'],['COOP — Cooperativa de Consumo (L31)','sup'],['Tenda Atacado Ltda (L31)','sup']],
+  [['Comercial Melhor Ltda (L32)','dist'],['COOP — Cooperativa de Consumo (L36)','sup'],['COOP — Cooperativa de Consumo (L37)','sup'],['COOP Cooperativa de Consumo (L38)','sup']],
+  [['COOP — Cooperativa de Consumo (L39)','sup'],['COOP — Cooperativa de Consumo (L40)','sup'],['COOP — Cooperativa de Consumo (L41)','sup'],['COOP — Cooperativa de Consumo (L42)','sup']],
+  [['Americanas S A (L61)','sup'],['30.883.150 Claudia Correia Neves (F4)','lat'],['A Poesia Monumento Pães e Doces (F4)','pad'],['Aeromate T1 Ltda (F4)','rest']],
+  [['Aki Mercado Ltda (F4)','sup'],['Alere Comércio de Produtos Alimentícios (F4)','dist'],['ASA Supermercado Comércio de Produtos (F4)','sup'],['Associação Privada Internacional (F4)','dist']],
+  [['Atacadista Kingfood Produtos Alim (F4)','dist'],['Best Market Comércio de Alimentos (F4)','sup'],['Casa Nápoles Pizzaria e Restaurante (F4)','rest'],['Chitão Distribuidora de Gêneros Alim (F4)','dist']],
+  [['Comercial de Alimentos Monte Alegre (F4)','dist'],['Comércio de Hortti Frutti Penalva (F4)','hort'],['Confiance Comercial Importadora (F4)','dist'],['CRAA Mercado Ltda (F4)','sup']],
+  [['Empório LDC Ltda (F4)','emp'],['Emporium Santa Helena Ltda (F4)','emp'],['Fabrique Pães Artesanais Ltda (F4)','pad'],['FBQ Alto da Lapa Pães Ltda (F4)','pad']],
+  [['Fire e Co Assados Ltda (F4)','rest'],['Fohat Tortas e Doces Eireli (F4)','pad'],['Hortifruti Vitória Rosa Ltda (F4)','hort'],['JAM Enterprises Restaurante Ltda (F4)','rest']],
+  [['Louisette Crepes e Café Francês Ltda (F4)','rest'],['MDL Distribuidora de Alimentos Ltda (F4)','dist'],['Mercadinho Beluthare Ltda (F4)','sup'],['Mercado Cecília Ltda (F4)','sup']],
+  [['Mercado e Distribuidora Pedro Escobar (F4)','dist'],['Mercado Família Gama Ltda (F4)','sup'],['Mercado Gratidão Ltda (F4)','sup'],['Mercado Mascena Eireli (F4)','sup']],
+  [['Nova Mega G Atacadista de Alimentos (F4)','dist'],['Odmeyer Super Mercearia Ltda (F4)','sup'],['Padaria e Confeitaria Manuel Maluco (F4)','pad'],['Padaria Rua do Rocio Pães e Lanches (F4)','pad']],
+  [['Pães e Doces Bella Jully Ltda (F4)','pad'],['Panificadora Delikatesse XI Ltda (F4)','pad'],['Panni Padaria e Restaurante Eireli (F4)','pad'],['Pastoral Pães Artesanais Eireli (F4)','pad']],
+  [['Primos Zhang Supermercado Ltda (F4)','sup'],['Roberto Kerbage (F4)','dist'],['Rosely P D Pereira e CIA Ltda (F4)','dist'],['Rubi Pães e Doces Ltda (F4)','pad']],
+  [['Shopping Fartura Vinhedo Comércio (F4)','hort'],['Supermercado Oliveira Camargo Eireli (F4)','sup'],['Supermercado Oliveira e Amorim Ltda (F4)','sup'],['Vimeg Comércio de Chocolates Ltda (F4)','dist']],
+  [['Comercial de Alimentos RED Ltda (F4 L2)','dist'],['Ellece Varejo de Alimentos Ltda (F4 L2)','dist'],['GR Serviços e Alimentação Ltda (F4 L2)','rest'],['Korin Administração de Franquia (F4 L2)','dist']],
+  [['NB Steak Florianópolis (F4 L2)','rest'],['Sacolão Vila Formosa Ltda (F4 L2)','hort'],['Supermercado Miralha Camargo II Ltda (F4 L2)','sup'],['Supermercado Oliveira Camargo Eireli (F4 L2)','sup']],
+  [['Zunzal Comércio de Alimentos Ltda (F4 L2)','dist'],['Baurupar Comercial Ltda (F4 L3)','dist'],['Comercial de Alimentos RED Ltda (F4 L3)','dist'],['Supermercado Alta Rotação Ltda (F4 L3)','sup']],
+  [['Supermercado Miralha Camargo Ltda (F4 L3)','sup'],['Baurupar Comercial Ltda (F4 L4)','dist'],['Comercial de Alimentos RED Ltda (F4 L4)','dist'],['Comercial de Alimentos RED Ltda (F4 L5)','dist']],
+  [['Ellece Varejo de Alimentos Ltda (F4 L5)','dist'],['Comercial de Alimentos RED Ltda (F4 L6)','dist'],['Peg Pese Supermercados (F4 L6)','sup'],['Comercial de Alimentos RED Ltda (F4 L7)','dist']],
+  [['Mercado dos Doces Vila Formosa (F4 L7)','sup'],['Peg Pese Supermercados (F4 L7)','sup'],['Comercial de Alimentos RED Ltda (F4 L8)','dist'],['Comercial de Alimentos RED Ltda (F4 L9)','dist']],
+];
+
+for(let i=0;i<176;i++){
+  const d = names[i] || [['Cliente '+(i*4+1),'dist'],['Cliente '+(i*4+2),'dist'],['Cliente '+(i*4+3),'dist'],['Cliente '+(i*4+4),'dist']];
+  ROTA.push({
+    day: i+1,
+    visits: [
+      {order:1,time:'08:00',name:d[0][0],seg:d[0][1]},
+      {order:2,time:'09:30',name:d[1][0],seg:d[1][1]},
+      {order:3,time:'11:00',name:d[2][0],seg:d[2][1]},
+      {order:4,time:'12:30',name:d[3][0],seg:d[3][1]},
+    ]
+  });
+}
+
+const checked = JSON.parse(localStorage.getItem('trilac_checked')||'{}');
+const notes   = JSON.parse(localStorage.getItem('trilac_notes')||'{}');
+
+let currentDay = 1;
+
+function saveChecked(){ localStorage.setItem('trilac_checked', JSON.stringify(checked)); }
+function saveNotes(){ localStorage.setItem('trilac_notes', JSON.stringify(notes)); }
+
+function getKey(day,order){ return day+'-'+order; }
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  const map={hoje:'📅 Hoje',semana:'📆 Semana',roteiro:'📋 Roteiro',objecoes:'💬 Objeções'};
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    if(b.textContent.includes(map[id])) b.classList.add('active');
+  });
+  if(id==='hoje') renderVisits();
+  if(id==='semana') renderWeek();
+}
+
+function buildDaySelector(){
+  const sel = document.getElementById('day-selector');
+  sel.innerHTML='';
+  const today = new Date();
+  for(let d=1;d<=176;d++){
+    const p=document.createElement('button');
+    p.className='day-pill'+(d===currentDay?' active':'');
+    p.textContent='Dia '+d;
+    p.onclick=()=>{ currentDay=d; buildDaySelector(); renderVisits(); };
+    sel.appendChild(p);
+  }
+  // scroll current into view
+  const pills = sel.querySelectorAll('.day-pill');
+  if(pills[currentDay-1]) pills[currentDay-1].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+}
+
+function renderVisits(){
+  const entry = ROTA[currentDay-1];
+  const total = entry.visits.length;
+  const done = entry.visits.filter(v=>checked[getKey(currentDay,v.order)]).length;
+  const pct = Math.round(done/total*100);
+
+  document.getElementById('status-bar').innerHTML=`
+    <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${total}</div><div class="stat-lbl">Visitas</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${done}</div><div class="stat-lbl">Concluídas</div></div>
+    <div class="stat-card"><div class="stat-num">${total-done}</div><div class="stat-lbl">Pendentes</div></div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--blue)">${pct}%</div>
+      <div class="stat-lbl">Progresso</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+
+  const dayNames=['','Segunda','Terça','Quarta','Quinta','Sexta'];
+  const wday = ((currentDay-1)%5)+1;
+  const weekNum = Math.ceil(currentDay/5);
+  document.getElementById('visits-title').textContent = `Semana ${weekNum} • ${dayNames[wday]}`;
+
+  document.getElementById('visits-container').innerHTML = entry.visits.map(v=>{
+    const key = getKey(currentDay,v.order);
+    const isDone = checked[key];
+    const seg = SEG[v.seg];
+    const n = notes[key]||'';
+    return `<div class="visit-card${isDone?' checked':''}" id="card-${key}">
+      <div class="visit-header" onclick="toggleVisit('${key}')">
+        <div class="order-badge badge-${v.seg}" style="background:${isDone?'#E8F5E9':''}; color:${isDone?'#2E7D32':''}">
+          ${isDone?'✓':v.order}
+        </div>
+        <div class="visit-info">
+          <div class="visit-time">${v.time}</div>
+          <div class="visit-name">${v.name}</div>
+        </div>
+        <span class="seg-badge seg-${v.seg}">${seg.label}</span>
+        <span class="chevron-icon" id="chev-${key}">›</span>
+      </div>
+      <div class="visit-body" id="body-${key}">
+        <div class="detail-row">
+          <span class="detail-icon">🏷️</span>
+          <div><div class="detail-label">Segmento</div><div class="detail-value">${seg.label}</div></div>
+        </div>
+        <div class="detail-row">
+          <span class="detail-icon">🕐</span>
+          <div><div class="detail-label">Horário sugerido</div><div class="detail-value">${v.time} (±30 min)</div></div>
+        </div>
+        <textarea class="notes-area" rows="2" placeholder="Anotações da visita..." 
+          onchange="saveNote('${key}', this.value)">${n}</textarea>
+        <div class="action-row">
+          <button class="btn-action btn-maps" onclick="openMaps('${v.name}')">🗺️ Maps</button>
+          <button class="btn-action btn-wpp" onclick="openWpp('${v.name}')">💬 WhatsApp</button>
+          <button class="btn-action btn-check" onclick="toggleCheck('${key}')">${isDone?'↩ Desfazer':'✓ Concluir'}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleVisit(key){
+  const body = document.getElementById('body-'+key);
+  const chev = document.getElementById('chev-'+key);
+  const open = body.classList.contains('open');
+  document.querySelectorAll('.visit-body').forEach(b=>b.classList.remove('open'));
+  document.querySelectorAll('.chevron-icon').forEach(c=>{ c.classList.remove('open'); c.textContent='›'; });
+  if(!open){ body.classList.add('open'); chev.classList.add('open'); chev.textContent='⌄'; }
+}
+
+function toggleCheck(key){
+  checked[key] = !checked[key];
+  saveChecked();
+  renderVisits();
+}
+
+function saveNote(key, val){
+  notes[key] = val;
+  saveNotes();
+}
+
+function openMaps(name){
+  const q = encodeURIComponent(name + ' São Paulo SP');
+  window.open('https://maps.google.com/?q='+q,'_blank');
+}
+
+function openWpp(name){
+  const msg = encodeURIComponent('Olá! Sou representante da Trilac / Sô Minas. Acabei de visitar vocês e gostaria de confirmar nosso pedido. Fico à disposição!');
+  window.open('https://wa.me/?text='+msg,'_blank');
+}
+
+function renderWeek(){
+  const sel = document.getElementById('week-select');
+  if(!sel.options.length){
+    for(let w=1;w<=36;w++){
+      const start=(w-1)*5+1, end=Math.min(start+4,176);
+      sel.add(new Option(`Semana ${w}  (Dias ${start}–${end})`,w));
+    }
+  }
+  const week = parseInt(sel.value)||1;
+  const start=(week-1)*5+1, end=Math.min(start+4,176);
+  const dayNames=['','Segunda','Terça','Quarta','Quinta','Sexta'];
+  let html='';
+  for(let d=start;d<=end;d++){
+    const entry=ROTA[d-1];
+    const done=entry.visits.filter(v=>checked[getKey(d,v.order)]).length;
+    const wday=((d-1)%5)+1;
+    html+=`<div class="week-day">
+      <div class="week-day-header" onclick="toggleWeekDay(this)">
+        <div class="week-day-num${d===currentDay?' today':''}">${d}</div>
+        <div class="week-day-info">
+          <div class="week-day-title">${dayNames[wday]}</div>
+          <div class="week-day-sub">${done}/4 concluídas</div>
+        </div>
+        <div class="progress-bar" style="width:60px"><div class="progress-fill" style="width:${done*25}%"></div></div>
+      </div>
+      <div class="week-day-body">
+        ${entry.visits.map(v=>{
+          const s=SEG[v.seg];
+          const done2=checked[getKey(d,v.order)];
+          return `<div class="mini-visit">
+            <span class="mini-time">${v.time}</span>
+            <span class="mini-name" style="${done2?'text-decoration:line-through;color:#90A4AE':''}">${v.name}</span>
+            <span class="mini-seg seg-${v.seg}">${s.label}</span>
+          </div>`;
+        }).join('')}
+        <button style="margin-top:8px;padding:8px 14px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;width:100%"
+          onclick="currentDay=${d}; showScreen('hoje')">Ver detalhes do Dia ${d} →</button>
+      </div>
+    </div>`;
+  }
+  document.getElementById('week-container').innerHTML=html;
+}
+
+function toggleWeekDay(el){
+  const body=el.nextElementSibling;
+  const open=body.style.display==='block';
+  document.querySelectorAll('.week-day-body').forEach(b=>b.style.display='none');
+  if(!open) body.style.display='block';
+}
+
+// ===== INIT =====
+const today = new Date();
+const fmt = today.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+document.getElementById('today-date').textContent = fmt;
+
+const weekSelect = document.getElementById('week-select');
+for(let w=1;w<=36;w++){
+  const s=(w-1)*5+1,e=Math.min(s+4,176);
+  weekSelect.add(new Option('Semana '+w+' (Dias '+s+'–'+e+')',w));
+}
+
+buildDaySelector();
+renderVisits();
+</script>
+</body>
+</html>
